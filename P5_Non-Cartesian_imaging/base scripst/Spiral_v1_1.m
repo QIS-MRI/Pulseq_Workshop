@@ -5,7 +5,7 @@ sliceThickness=3e-3;       % slice thinckness
 Nslices=1;
 adcOversamplingFactor=2;            % oversampling along the readout (trajectory) dimension; I would say it needs to be at least 2
 phi=pi/2;                  % orientation of the readout e.g. for interleaving
-Nr = 4;                         % num_of_ 
+Nr = 5;                         % num_of_ 
 
 % Set system limits
 sys = mr.opts('MaxGrad',22,'GradUnit','mT/m',...
