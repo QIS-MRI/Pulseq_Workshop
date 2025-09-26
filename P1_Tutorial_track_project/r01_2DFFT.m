@@ -5,14 +5,16 @@
 % needs mapVBVD in the path
 
 %% Load data sorted by name
-path='../data'; % directory to be scanned for data files
-nF=1; % the number of the file / data set to load
+%path='../data'; % directory to be scanned for data files
+path = 'C:\Users\Ambra\Desktop\Work\Bern internship\Pulseq_Workshop\P1_Tutorial_track_project';
+nF=2; % the number of the file / data set to load
 
 pattern='*.dat';
 D=dir([path filesep pattern]);
 [~,I]=sort(string({D(:).name}));
-data_file_path=[path filesep D(I(nF)).name];
-
+%data_file_path=[path filesep D(I(nF)).name]; %only reads'C:\Users\Ambra\Desktop\Work\Bern internship\Pulseq_Workshop\P1_Tutorial_track_project\meas_MID00083_FID10702_pulseq.dat'
+%data_file_path = ['C:\Users\Ambra\Desktop\Work\Bern internship\Pulseq_Workshop\P1_Tutorial_track_project\meas_MID00083_FID10702_pulseq.dat']; %just noise 29K 30 gradient amplitude, GRE5
+data_file_path = ['C:\Users\Ambra\Desktop\Work\Bern internship\Pulseq_Workshop\P1_Tutorial_track_project\meas_MID00076_FID10695_pulseq.dat']; %for 1H GRE5
 %% Load the latest file from a dir
 % path='../IceNIH_RawSend/'; % directory to be scanned for data files
 % %path='~/Dropbox/shared/data/siemens/';
@@ -28,8 +30,10 @@ twix_obj = mapVBVD(data_file_path);
 
 %% Load sequence from file (optional, you may still have it in memory)
 
-seq_file_path = [data_file_path(1:end-3) 'seq'];
-
+%seq_file_path = [data_file_path(1:end-3) 'seq'];
+%seq_file_path = ['C:\Users\Ambra\Desktop\Work\Bern internship\Pulseq_Workshop\P1_Tutorial_track_project\DEMO_gre3.seq', 'C:\Users\Ambra\Desktop\Work\Bern internship\Pulseq_Workshop\P1_Tutorial_track_project\DEMO_gre5.seq'];
+%DEMO_gre3.seq did not work
+seq_file_path = ['C:\Users\Ambra\Desktop\Work\Bern internship\Pulseq_Workshop\P1_Tutorial_track_project\DEMO_gre5.seq'];
 [~,out_name,~] = fileparts(seq_file_path); 
 
 seq = mr.Sequence();              % Create a new sequence object

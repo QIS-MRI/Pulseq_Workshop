@@ -2,23 +2,25 @@
 % Define FOV and resolution
 fov = 256e-3;
 sliceThickness = 5e-3;
-Nx = 256;
+Nx = 64;
 Ny = Nx;
 
 % Define sequence parameters
 TE = 8e-3;
-TR = 22e-3;
-alpha=30;
-
+TR = 1.5;
+alpha=90;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+gamma = 8.7346e6; %39K
 % set system limits
-sys = mr.opts('MaxGrad',12,'GradUnit','mT/m',...
+% change gamma, B0 and rfIngdowntime
+sys = mr.opts('MaxGrad',28,'GradUnit','mT/m',...
     'MaxSlew',100,'SlewUnit','T/m/s',...
-    'rfRingdownTime', 20e-6, 'rfDeadtime', 100e-6, 'B0', 7);
+    'rfRingdownTime', 30e-6, 'rfDeadtime', 100e-6, 'B0', 6.98, 'gamma', gamma);
 
 % Create a new sequence object
 seq=mr.Sequence(sys);
 
 % Create slice selective alpha-pulse and corresponding gradients
+% Increase RF duration to double
 [rf, gz, gzReph] = mr.makeSincPulse(alpha*pi/180, 'Duration', 4e-3,...
     'SliceThickness', sliceThickness, 'apodization', 0.5,'timeBwProduct', 4, ...
     'system' ,sys, 'use', 'excitation');
@@ -83,7 +85,7 @@ end
 seq.setDefinition('FOV', [fov fov sliceThickness]);
 seq.setDefinition('Name', 'DEMO_gre3');
 
-seq.write(['DEMO_gre3.seq'])       % Write to pulseq file
+seq.write_v141(['DEMO_gre3.seq'])       % Write to pulseq file
 
 seq.plot('timeRange', [0 2*TR])
 
