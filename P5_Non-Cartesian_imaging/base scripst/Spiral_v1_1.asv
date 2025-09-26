@@ -1,9 +1,9 @@
 % this is an experimental spiral sequence
 
-fov=96*4e-3; Nx=96; Ny=Nx;  % Define FOV and resolution
+fov=256e-3; Nx=96; Ny=Nx;  % Define FOV and resolution
 sliceThickness=3e-3;       % slice thinckness
 Nslices=1;
-adcOversamplingFactor=2;            % oversampling along the readout (trajectory) dimension; I would say it needs to be at least 2
+adcOversamplingFactor=1;            % oversampling along the readout (trajectory) dimension; I would say it needs to be at least 2
 phi=pi/2;                  % orientation of the readout e.g. for interleaving
 Nr = 4;                         % num_of_ 
 
@@ -32,8 +32,8 @@ gz_fs = mr.makeTrapezoid('z',sys,'delay',mr.calcDuration(rf_fs),'Area',1/1e-4); 
     'SliceThickness',sliceThickness,'apodization',0.5,'timeBwProduct',4,'use','excitation');
 
 % define k-space parameters
-deltak=1/fov*Nr;
-kRadius = round(Nx/2/Nr); % the radius of the spiral in k-space, determined by the user-defiled resolution; it is also the number of windings of the spiral.
+deltak=1/fov*4;
+kRadius = round(Nx/2/4); % the radius of the spiral in k-space, determined by the user-defiled resolution; it is also the number of windings of the spiral.
 kSamples = round(2*pi*kRadius)*adcOversamplingFactor ; % the number of samples of the outest cycle of the spiral
 
 % calculate a raw Archimedian spiral trajectory
@@ -132,7 +132,7 @@ gy_spoil=mr.makeExtendedTrapezoid('y','times',[0 mr.calcDuration(gz_spoil)],'amp
  
 % Define sequence blocks
 for s=1:Nslices
-    for i = 1
+    for i= [1, 2, 3, 4]
         seq.addBlock(rf_fs,gz_fs); % fat-sat    
         rf.freqOffset=gz.amplitude*sliceThickness*(s-1-(Nslices-1)/2);
         seq.addBlock(rf,gz);
