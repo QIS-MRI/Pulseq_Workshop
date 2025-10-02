@@ -132,12 +132,12 @@ gy_spoil=mr.makeExtendedTrapezoid('y','times',[0 mr.calcDuration(gz_spoil)],'amp
  
 % Define sequence blocks
 for s=1:Nslices
-    for i = 1
+    for i = 1:Nr*2
         seq.addBlock(rf_fs,gz_fs); % fat-sat    
         rf.freqOffset=gz.amplitude*sliceThickness*(s-1-(Nslices-1)/2);
         seq.addBlock(rf,gz);
-        seq.addBlock(mr.rotate('z',phi*(i),gzReph,gx,gy,adc,'system',sys));
-        seq.addBlock(mr.rotate('z',phi*(i),gx_spoil,gy_spoil,gz_spoil,'system',sys));
+        seq.addBlock(mr.rotate('z',phi/2*(i),gzReph,gx,gy,adc,'system',sys));
+        seq.addBlock(mr.rotate('z',phi/2*(i),gx_spoil,gy_spoil,gz_spoil,'system',sys));
     end
 end
 
@@ -157,7 +157,7 @@ seq.setDefinition('FOV', [fov fov sliceThickness]);
 seq.setDefinition('Name', 'spiral');
 seq.setDefinition('MaxAdcSegmentLength', adcSamplesPerSegment); % this is important for making the sequence run automatically on siemens scanners without further parameter tweaking
 
-seq.write('spiral.seq');   % Output sequence for scanner
+%seq.write('spiral_interleaved8.seq');   % Output sequence for scanner
 
 % the sequence is ready, so let's see what we got 
 seq.plot();             % Plot sequence waveforms
