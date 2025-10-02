@@ -9,9 +9,7 @@
 % change the name below to match that of your file.
 
 
-% Milena Capiglioni, University of Bern 2025.
-
-function safety_check(seq_file)
+function safety_check(seq_file,scanner)
 
     % Gradient system file (must be in the same folder)
     gradFile = 'MP_GPA_K2309_2250V_951A_AS82.asc';
@@ -23,34 +21,16 @@ function safety_check(seq_file)
     seq = mr.Sequence();
     seq.read(seq_file);
 
-    % read hash and save it
-    fileText = fileread(seq_file);
-    hashStr = '';
-    sigIdx  = strfind(fileText,'[SIGNATURE]');
-    if ~isempty(sigIdx)
-        % Extract everything after [SIGNATURE]
-        tailText = fileText(sigIdx:end);
-        % Look for the line starting with 'Hash '
-        hashLine = regexp(tailText,'(?m)^Hash\s+([0-9a-fA-F]+)','tokens','once');
-        if ~isempty(hashLine)
-            hashStr = hashLine{1};
-        end
-    end
-
     % PNS check
     check_PNS(seq, gradFile,t);
 
     % Acoustic resonance check
-    check_acoustic_resonances(seq, gradFile,t);
+    check_acoustic_resonances(seq, gradFile, t, scanner);
 
     % Add a global title with the hash (if found)
-    if ~isempty(hashStr)
-        title(t, sprintf('Hash: %s', hashStr), ...
-            'FontWeight','bold','Interpreter','none');
-    else
-        title(t, 'Hash: (not found)', ...
-            'FontWeight','bold','Interpreter','none');
-    end
+    title(t, sprintf('Hash: %s', seq.signatureValue), ...
+        'FontWeight','bold','Interpreter','none');
+
 
     [~,name] = fileparts(seq_file);
     saveas(f,[name '_safety_check.png']);
@@ -81,12 +61,19 @@ function check_PNS(seq, gradFile,t)
     end
 end
 
-function check_acoustic_resonances(seq, gradFile,t)
+function check_acoustic_resonances(seq, gradFile,t,scanner)
 
-    DEFAULT_ACOUSTIC_RESONANCES = [ ...
-        struct('frequency', 590,  'bandwidth', 100); ...
-        struct('frequency', 1140, 'bandwidth', 220) ...
-    ];
+    if strcmp(scanner,'3T')
+        DEFAULT_ACOUSTIC_RESONANCES = [ ...
+            struct('frequency', 590,  'bandwidth', 100); ...
+            struct('frequency', 1140, 'bandwidth', 220) ...
+        ];
+    elseif strcmp(scanner,'7T')
+        DEFAULT_ACOUSTIC_RESONANCES = [ ...
+            struct('frequency', 1100,  'bandwidth', 300); ...
+            struct('frequency', 550, 'bandwidth', 100) ...
+        ];
+    end
 
     if exist(gradFile, 'file')
         asc = mr.Siemens.readasc(gradFile);
@@ -105,7 +92,7 @@ function check_acoustic_resonances(seq, gradFile,t)
         acoustic_resonances = DEFAULT_ACOUSTIC_RESONANCES;
     end
 
-    [spectrograms, spectrogram_rss, frequencies] = calculate_gradient_spectrum(seq, acoustic_resonances, true, 10, 0.5, 2000, 'max', [], false);
+    [spectrograms, spectrogram_rss, frequencies] = calculate_gradient_spectrum(seq, acoustic_resonances, false, 10, 0.02, 2000, 'max', [], false);
     
     nexttile(t);
     hold all;

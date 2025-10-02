@@ -4,29 +4,15 @@ import pypulseq as pp
 import matplotlib.pyplot as plt
 
 # Predefined acoustic resonance frequencies (example values - adjust as needed)
-DEFAULT_ACOUSTIC_RESONANCES = [ # For our Siemens 3T Prisma
+DEFAULT_ACOUSTIC_RESONANCES_3T = [ # For our Siemens 3T Prisma
     {"frequency": 590, "bandwidth": 100},
     {"frequency": 1140, "bandwidth": 220}
 ]
 
-def extract_md5_hash(seq_file):
-    """
-    Extract the MD5 hash from the last line of the .seq file
-    """
-    try:
-        with open(seq_file, 'r') as f:
-            lines = f.readlines()
-            # Look for the hash in the last few lines
-            for line in reversed(lines):
-                line = line.strip()
-                if line.startswith("Hash "):
-                    # Extract the hash part after "Hash "
-                    hash_value = line[5:]  # Remove "Hash " prefix
-                    return hash_value
-        return "Hash not found"
-    except Exception as e:
-        print(f"Error reading seq file for hash: {e}")
-        return "Hash extraction failed"
+DEFAULT_ACOUSTIC_RESONANCES_7T = [ # For our Siemens 3T Prisma
+    {"frequency": 550, "bandwidth": 100},
+    {"frequency": 1100, "bandwidth": 300}
+]
 
 def check_PNS(seq, gradFile, seq_file):
     """
@@ -40,13 +26,10 @@ def check_PNS(seq, gradFile, seq_file):
         print(f"Warning: Gradient file '{gradFile}' not found. Skipping PNS check.")
         return
 
-    # Extract MD5 hash for the title
-    md5_hash = extract_md5_hash(seq_file)
-
     pns_ok, pns_n, pns_c, tpns = seq.calculate_pns(gradient_file, do_plots=True)
 
     # Add title with MD5 hash
-    plt.suptitle(f"PNS Check - Hash: {md5_hash}", fontsize=14, fontweight='bold')
+    plt.suptitle(f"PNS Check - Hash: {seq.signature_value}", fontsize=14, fontweight='bold')
 
     # Save the plot as PNG
     output_filename = f"pns_check_{os.path.basename(seq_file).replace('.seq', '')}.png"
@@ -61,7 +44,7 @@ def check_PNS(seq, gradFile, seq_file):
         plt.show()
         raise RuntimeError("PNS check failed!")
 
-def check_acoustic_resonances(seq, gradFile, seq_file):
+def check_acoustic_resonances(seq, gradFile, seq_file, scanner):
     """
     Plots the acoustic resonances of the sequence against the forbidden frequencies specified in gradFile
     """
@@ -87,25 +70,26 @@ def check_acoustic_resonances(seq, gradFile, seq_file):
         print(f"Using acoustic resonances from gradient file: {gradFile}")
     else:
         # Use default acoustic resonances if gradient file is not available
-        acoustic_resonances = DEFAULT_ACOUSTIC_RESONANCES
+        if scanner == '3T':
+            acoustic_resonances = DEFAULT_ACOUSTIC_RESONANCES_3T
+        elif scanner == '7T':
+            acoustic_resonances = DEFAULT_ACOUSTIC_RESONANCES_7T
+        else:
+            raise ValueError("Unknown scanner type. Please specify '3T' or '7T'.")
         print(f"Warning: Gradient file '{gradFile}' not found. Using default acoustic resonances.")
 
-    # Extract MD5 hash for the title
-    md5_hash = extract_md5_hash(seq_file)
-
-    seq.calculate_gradient_spectrum(acoustic_resonances=acoustic_resonances, use_derivative=True, frequency_oversampling=10, window_width=(min(0.5,seq.duration()[0])))
+    seq.calculate_gradient_spectrum(acoustic_resonances=acoustic_resonances, use_derivative=False, frequency_oversampling=10, window_width=(min(0.02,seq.duration()[0])))
 
     # Add title with MD5 hash
-    plt.suptitle(f"Acoustic Resonances - Hash: {md5_hash}", fontsize=14, fontweight='bold')
+    plt.suptitle(f"Acoustic Resonances - Hash: {seq.signature_value}", fontsize=14, fontweight='bold')
 
     # Save the plot as PNG
     output_filename = f"acoustic_resonances_{os.path.basename(seq_file).replace('.seq', '')}.png"
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
     print(f"Acoustic resonances plot saved as: {output_filename}")
-
     plt.show()
 
-def safety_check(seq_file):
+def safety_check(seq_file, scanner='3T'):
     """
     Test a pulseq sequence for PNS and Acoustic Resonances
     """
@@ -114,6 +98,9 @@ def safety_check(seq_file):
     # Create a Sequence object
     seq = pp.Sequence()
 
+    # Print the sequnece duration
+    #print(f"Sequence duration: {seq.duration()[0]:.3f} s")
+
     # Load the sequence from a .seq file
     seq.read(seq_file)
 
@@ -121,11 +108,11 @@ def safety_check(seq_file):
     check_PNS(seq, gradFile, seq_file)
 
     # Check the acoustic resonances
-    check_acoustic_resonances(seq, gradFile, seq_file)
+    check_acoustic_resonances(seq, gradFile, seq_file, scanner)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python safety_check.py <path_to_seq_file>")
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
+        print("Usage: python safety_check.py <path_to_seq_file> <scanner_type (3T or 7T, default 3T)>")
         sys.exit(1)
 
     seq_file = sys.argv[1]
